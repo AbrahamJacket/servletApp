@@ -35,8 +35,8 @@ public class RegisterServlet extends HttpServlet {
             }
         }
 
-        if (!access.equals(Users.AccessType.USER.toString()) || !access.equals(Users.AccessType.MODERATOR.toString())
-                || !access.equals(Users.AccessType.ADMIN.toString())){
+        if (!access.equals(Users.AccessType.USER.toString()) && !access.equals(Users.AccessType.MODERATOR.toString())
+                && !access.equals(Users.AccessType.ADMIN.toString())){
             out.println("Wrong access type!");
             result = 0;
         }
