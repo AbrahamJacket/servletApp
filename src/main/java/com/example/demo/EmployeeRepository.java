@@ -6,28 +6,17 @@ import java.util.List;
 
 public class EmployeeRepository {
 
-    public static void main(String[] args) {
-        getConnection();
-
-        Employee employee = new Employee();
-
-        employee.setName("oleg");
-        employee.setEmail(" ");
-        employee.setCountry(" ");
-        save(employee);
-    }
-
     public static Connection getConnection() {
 
         Connection connection = null;
-        String url = "jdbc:mysql://localhost:3306/employee";
-        String user = "root";
+        String url = "jdbc:postgresql://localhost:5432/employee";
+        String user = "postgres";
         String password = "1234";
 
         try {
             connection = DriverManager.getConnection(url, user, password);
             if (connection != null) {
-                System.out.println("Connected to the MySQL server successfully.");
+                System.out.println("Connected to the PostgreSQL server successfully.");
             } else {
                 System.out.println("Failed to make connection!");
             }

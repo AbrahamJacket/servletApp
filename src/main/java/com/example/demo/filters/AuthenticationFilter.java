@@ -1,5 +1,8 @@
 package com.example.demo.filters;
 
+import com.example.demo.session.LoginData;
+import com.example.demo.session.Users;
+
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
@@ -7,41 +10,53 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Objects;
 
-@WebFilter ("/*")
+@WebFilter("/*")
 public class AuthenticationFilter implements Filter {
 
     private ServletContext context;
 
     public void init(FilterConfig fConfig) throws ServletException {
         this.context = fConfig.getServletContext();
-        this.context.log(">>AuthenticationFilter initialized");
+        this.context.log(">>> AuthenticationFilter initialized");
     }
 
-    @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-
-        HttpServletRequest req = (HttpServletRequest) servletRequest;
-        HttpServletResponse res = (HttpServletResponse) servletResponse;
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        this.context.log("Started doFilter");
+        HttpServletRequest req = (HttpServletRequest) request;
+        HttpServletResponse res = (HttpServletResponse) response;
 
         String uri = req.getRequestURI();
+        HttpSession session = req.getSession(false);
+
 
         this.context.log("Requested Resource::http://localhost:8080" + uri);
 
-        HttpSession session = req.getSession(false);
+        this.context.log("session == null - " + (session == null));
+        this.context.log("uri.endsWith(demo/RegisterServlet) - " + (uri.endsWith("demo/RegisterServlet")));
 
-        if (session == null && !(uri.endsWith("demo/saveServlet") || uri.endsWith("demo/loginServlet") || uri.endsWith("demo/.\\viewServlet"))){
-            this.context.log("<<<Unauthorized access request");
+        if (session == null && !uri.endsWith("demo/loginServlet")) {
+            this.context.log("<<< User is not authorized >>>");
             PrintWriter out = res.getWriter();
-            out.println("No access!!!");
+            out.println("You are not logged in");
+        } else if (session != null && LoginData.getUserByName((String) Objects.requireNonNull(session).getAttribute("user")).getAccessType() == Users.AccessType.USER
+                && (uri.endsWith("demo/DeleteUserServlet") || uri.endsWith("demo/EditUserServlet") || uri.endsWith("demo/RegisterServlet")
+                || uri.endsWith("demo/deleteServlet") || uri.endsWith("demo/putServlet") || uri.endsWith("demo/saveServlet"))) {
+            this.context.log("<<<User has no access>>>");
+            PrintWriter out = res.getWriter();
+            out.println("Access Denied");
+        } else if (session != null && LoginData.getUserByName(session.getAttribute("user").toString()).getAccessType() == Users.AccessType.MODERATOR
+                && (uri.endsWith("demo/DeleteUserServlet") || uri.endsWith("demo/EditUserServlet") || uri.endsWith("demo/RegisterServlet"))) {
+            this.context.log("<<<User has no access>>>");
+            PrintWriter out = res.getWriter();
+            out.println("Access Denied");
         } else {
-            filterChain.doFilter(servletRequest, servletResponse);
+            chain.doFilter(request, response);
         }
     }
 
-    @Override
     public void destroy() {
-        Filter.super.destroy();
+        //close any resources here
     }
-
 }
